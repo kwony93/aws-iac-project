@@ -1,0 +1,18 @@
+# roles/jenkins/tasks/main.yml
+- name: "Jenkins EC2 배포/제거"
+  amazon.aws.ec2_instance:
+    name: "{{ tag_prefix }}-jenkins"
+    image_id: "{{ ubuntu_ami }}"
+    instance_type: t3.micro
+    private_ip: "{{ jenkins_private_ip }}"
+    vpc_subnet_id: "{{ priv_subnet_a_id }}"
+    security_groups: ["{{ jenkins_sg_id }}"]
+    iam_instance_profile: "{{ jenkins_profile_name }}"
+    user_data: |
+      #!/bin/bash
+      git clone https://github.com/sjh4616/jenkins.git /home/ubuntu/jenkins
+      cd /home/ubuntu/jenkins
+      chmod u+x docker-install.sh
+      ./docker-install.sh
+      docker compose up -d
+    state: "{{ infra_state }}"

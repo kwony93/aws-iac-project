@@ -1,0 +1,16 @@
+# roles/security/tasks/main.yml
+- name: Create Web Security Group
+  amazon.aws.ec2_security_group:
+    name: "{{ tag_prefix }}-web-sg"
+    description: "Allow HTTP and HTTPS"
+    vpc_id: "{{ vpc_id }}"
+    rules:
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        cidr_ip: 0.0.0.0/0
+    state: "{{ infra_state }}"

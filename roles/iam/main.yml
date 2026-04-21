@@ -1,0 +1,26 @@
+# roles/iam/tasks/main.yml
+- name: "S3 Access Policy 생성/삭제"
+  amazon.aws.iam_policy:
+    policy_name: "{{ tag_prefix }}-s3-policy"
+    policy_json: |
+      {
+        "Version": "2012-10-17",
+        "Statement": [{"Effect": "Allow", "Action": "s3:*", "Resource": "*"}]
+      }
+    state: "{{ infra_state }}"
+
+- name: "App EC2 IAM Role 구성"
+  amazon.aws.iam_role:
+    name: "{{ tag_prefix }}-app-role"
+    assume_role_policy_document: |
+      {"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"}}]}
+    managed_policies:
+      - "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+      - "arn:aws:iam::{{ lookup('aws_account_id') }}:policy/{{ tag_prefix }}-s3-policy"
+    state: "{{ infra_state }}"
+
+- name: "App Instance Profile 생성/삭제"
+  amazon.aws.iam_instance_profile:
+    name: "{{ tag_prefix }}-app-profile"
+    role: "{{ tag_prefix }}-app-role"
+    state: "{{ infra_state }}"
