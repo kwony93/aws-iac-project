@@ -1,3 +1,5 @@
+ansible version : 2.18.15
+
 .
 ├── global-var/
 │   └── main.yml           # 전역 변수 (Region, Prefix, CIDR 등)

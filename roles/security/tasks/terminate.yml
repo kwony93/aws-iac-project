@@ -17,3 +17,4 @@
     - "{{ prefix }}-ssm-sg"
     - "{{ prefix }}-web-sg"
     - "{{ prefix }}-ssh-sg"
+  when: vpc_info.vpcs | length > 0

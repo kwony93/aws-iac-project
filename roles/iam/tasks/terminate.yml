@@ -1,20 +1,23 @@
-# 1. EC2 인스턴스 프로파일 삭제
+# 1. 인스턴스 프로파일에서 role 분리
+- name: Detach role from EC2 Instance Profile
+  amazon.aws.iam_instance_profile:
+    name: "{{ prefix }}-app-instance-profile"
+    role: ""
+
+# 2. EC2 인스턴스 프로파일 삭제
 - name: Remove EC2 Instance Profile
   amazon.aws.iam_instance_profile:
     name: "{{ prefix }}-app-instance-profile"
     state: absent
-    region: "{{ region }}"
 
-# 2. CodeDeploy 서비스 역할 삭제
+# 3. CodeDeploy 서비스 역할 삭제
 - name: Remove CodeDeploy Service Role
-  community.aws.iam_role:
+  amazon.aws.iam_role:
     name: "{{ prefix }}-codedeploy-service-role"
     state: absent
-    region: "{{ region }}"
 
-# 3. APP EC2 역할 삭제
+# 4. APP EC2 역할 삭제
 - name: Remove APP EC2 Role
-  community.aws.iam_role:
+  amazon.aws.iam_role:
     name: "{{ prefix }}-app-ec2-role"
     state: absent
-    region: "{{ region }}"

@@ -43,7 +43,7 @@
       tags: jenkins      
 
     # 6. 로드밸런스 및 대상그룹 (ALB, TG)
-    - name: LoabBalancer & Target Group Layer
+    - name: LoadBalancer & Target Group Layer
       include_role:
         name: loadbalancer
         tasks_from: "{{ action }}"
