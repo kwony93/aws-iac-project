@@ -146,6 +146,7 @@
         nat_gateway_id: "{{ nat_gateway_id_final }}"
 
 # 15. Public 서브넷들을 Public RT에 연결
+# 기존 route가 삭제되지 않도록 purge_routes: false 추가
 - name: Associate Public Subnets with Public Route Table
   amazon.aws.ec2_vpc_route_table:
     vpc_id: "{{ vpc_result.vpc.id }}"
@@ -153,6 +154,7 @@
     lookup: tag
     tags:
       Name: "{{ prefix }}-pub-rt"
+    purge_routes: false
     subnets: >-
       {{
         subnet_results.results
@@ -162,6 +164,7 @@
       }}
 
 # 16. Private 서브넷들을 Private RT에 연결
+# 기존 route가 삭제되지 않도록 purge_routes: false 추가
 - name: Associate Private Subnets with Private Route Table
   amazon.aws.ec2_vpc_route_table:
     vpc_id: "{{ vpc_result.vpc.id }}"
@@ -169,6 +172,7 @@
     lookup: tag
     tags:
       Name: "{{ prefix }}-pri-rt"
+    purge_routes: false
     subnets: >-
       {{
         subnet_results.results

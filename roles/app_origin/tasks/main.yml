@@ -28,34 +28,63 @@
     vpc_subnet_id: "{{ subnet_info.subnets[0].id }}"
     security_groups: "{{ sg_info.security_groups | map(attribute='group_id') | list }}"
     iam_instance_profile: "{{ prefix }}-app-instance-profile"
-    exact_count: 1
-    filters:
-      "tag:Name": "{{ prefix }}-app-origin"
-      instance-state-name:
-        - pending
-        - running
-        - stopping
-        - stopped
     network:
-      assign_public_ip: true
+      assign_public_ip: yes
     user_data: |
       #!/bin/bash
       set -eux
-
       export DEBIAN_FRONTEND=noninteractive
+
       apt-get update -y
-      apt-get install -y docker.io ruby-full wget
+      apt-get install -y docker.io ruby-full wget git zip unzip
+      # apt-get install -y nginx
+
+      # systemctl enable nginx
+      # systemctl start nginx
 
       systemctl enable docker
       systemctl start docker
+
+      echo "nginx ready - waiting for app" > /var/www/html/index.html
+
+      # cat <<EOF > /etc/nginx/sites-available/default
+      # server {
+      #     listen 80;
+      #     server_name _;
+
+      #     root /var/www/html;
+      #     index index.html;
+
+      #     location / {
+      #         proxy_pass http://127.0.0.1:8080;
+      #         proxy_connect_timeout 1s;
+      #         proxy_read_timeout 3s;
+      #         proxy_send_timeout 3s;
+
+      #         proxy_set_header Host \$host;
+      #         proxy_set_header X-Real-IP \$remote_addr;
+      #         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+      #         proxy_set_header X-Forwarded-Proto \$scheme;
+
+      #         proxy_intercept_errors on;
+      #         error_page 502 503 504 = @fallback;
+      #     }
+
+      #     location @fallback {
+      #         try_files /index.html =200;
+      #     }
+      # }
+      # EOF
+
+      # systemctl restart nginx
 
       cd /home/ubuntu
       wget https://aws-codedeploy-{{ region }}.s3.{{ region }}.amazonaws.com/latest/install
       chmod +x ./install
       ./install auto
-
       systemctl enable codedeploy-agent
       systemctl start codedeploy-agent
+
     tags:
       Name: "{{ prefix }}-app-origin"
       Role: "Origin"
@@ -74,7 +103,7 @@
 # 5. user_data 완료 추가 대기
 - name: Wait extra time for user_data completion
   ansible.builtin.pause:
-    seconds: 120
+    seconds: 180
 
 # 6. AMI 생성
 - name: Create AMI from App Origin Instance

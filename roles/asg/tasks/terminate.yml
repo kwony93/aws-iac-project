@@ -5,6 +5,7 @@
     region: "{{ region }}"
     state: absent
     wait_for_instances: yes
+    wait_timeout: 900
 
 # 2. 시작 템플릿 삭제
 - name: Remove Launch Template

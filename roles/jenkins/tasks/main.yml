@@ -1,4 +1,5 @@
-# 1. 서브넷 ID 조회 (172.40.64.0/24 대역인 pri-a 조회)
+---
+# 1. Jenkins용 Private Subnet 조회
 - name: Get Jenkins Subnet ID
   amazon.aws.ec2_vpc_subnet_info:
     region: "{{ region }}"
@@ -6,17 +7,17 @@
       "tag:Name": "{{ prefix }}-pri-a"
   register: jenkins_subnet
 
-# 2. 보안 그룹 ID 조회
+# 2. Jenkins용 보안 그룹 조회
 - name: Get SG IDs for Jenkins
   amazon.aws.ec2_security_group_info:
     region: "{{ region }}"
     filters:
-      group-name: 
+      group-name:
         - "{{ prefix }}-ssh-sg"
         - "{{ prefix }}-web-sg"
   register: sg_info
 
-# 3. Jenkins EC2 생성 (고정 IP 및 User Data 적용)
+# 3. Jenkins EC2 생성
 - name: Launch Jenkins EC2
   amazon.aws.ec2_instance:
     name: "{{ prefix }}-jenkins"
@@ -25,19 +26,30 @@
     instance_type: "{{ instance_type }}"
     key_name: "{{ key_name }}"
     vpc_subnet_id: "{{ jenkins_subnet.subnets[0].id }}"
+    exact_count: 1
+    filters:
+      "tag:Name": "{{ prefix }}-jenkins"
+      instance-state-name:
+        - pending
+        - running
+        - stopping
+        - stopped
     network_interfaces:
       - device_index: 0
+        subnet_id: "{{ jenkins_subnet.subnets[0].id }}"
         private_ip_address: "{{ jenkins_fixed_ip }}"
         groups: "{{ sg_info.security_groups | map(attribute='group_id') | list }}"
-        assign_public_ip: false
-    iam_instance_profile: "{{ prefix }}-app-instance-profile"
-    # 요구사항: Jenkins 배포 스크립트 실행
+    iam_instance_profile: "{{ prefix }}-jenkins-instance-profile"
     user_data: |
       #!/bin/bash
+      set -eux
+      export DEBIAN_FRONTEND=noninteractive
+
       apt-get update -y
-      
-      # Jenkins 레포지토리 클론 및 실행
+      apt-get install -y git zip unzip wget curl
+
       cd /home/ubuntu
+      rm -rf jenkins
       git clone {{ jenkins_git_repo }}
       cd jenkins
       chmod u+x docker-install.sh
@@ -51,3 +63,5 @@
           delete_on_termination: true
     tags:
       Name: "{{ prefix }}-jenkins"
+      Role: "Jenkins"
+  register: jenkins_ec2
