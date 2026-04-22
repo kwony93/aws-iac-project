@@ -33,57 +33,31 @@
     user_data: |
       #!/bin/bash
       set -eux
+      exec > /var/log/user-data.log 2>&1
       export DEBIAN_FRONTEND=noninteractive
 
+      # 패키지 설치
       apt-get update -y
-      apt-get install -y docker.io ruby-full wget git zip unzip
-      # apt-get install -y nginx
+      apt-get install -y docker.io ruby-full wget curl git zip unzip docker-compose
 
-      # systemctl enable nginx
-      # systemctl start nginx
-
+      # Docker 설정
       systemctl enable docker
       systemctl start docker
+      usermod -aG docker ubuntu || true
 
-      echo "nginx ready - waiting for app" > /var/www/html/index.html
-
-      # cat <<EOF > /etc/nginx/sites-available/default
-      # server {
-      #     listen 80;
-      #     server_name _;
-
-      #     root /var/www/html;
-      #     index index.html;
-
-      #     location / {
-      #         proxy_pass http://127.0.0.1:8080;
-      #         proxy_connect_timeout 1s;
-      #         proxy_read_timeout 3s;
-      #         proxy_send_timeout 3s;
-
-      #         proxy_set_header Host \$host;
-      #         proxy_set_header X-Real-IP \$remote_addr;
-      #         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-      #         proxy_set_header X-Forwarded-Proto \$scheme;
-
-      #         proxy_intercept_errors on;
-      #         error_page 502 503 504 = @fallback;
-      #     }
-
-      #     location @fallback {
-      #         try_files /index.html =200;
-      #     }
-      # }
-      # EOF
-
-      # systemctl restart nginx
-
+      # CodeDeploy Agent 설치
       cd /home/ubuntu
       wget https://aws-codedeploy-{{ region }}.s3.{{ region }}.amazonaws.com/latest/install
       chmod +x ./install
       ./install auto
+
       systemctl enable codedeploy-agent
       systemctl start codedeploy-agent
+
+      # 상태 확인 로그
+      systemctl status codedeploy-agent --no-pager || true
+
+    
 
     tags:
       Name: "{{ prefix }}-app-origin"
