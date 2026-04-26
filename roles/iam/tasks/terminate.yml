@@ -27,23 +27,23 @@
     state: absent
   ignore_errors: yes
 
-# 5. CodeDeploy 서비스 역할 삭제
+# 5. APP EC2 역할 삭제
+- name: Remove APP EC2 Role
+  amazon.aws.iam_role:
+    name: "{{ prefix }}-app-role"
+    state: absent
+  ignore_errors: yes
+
+# 6. Jenkins EC2 역할 삭제
+- name: Remove Jenkins EC2 Role
+  amazon.aws.iam_role:
+    name: "{{ prefix }}-jenkins-role"
+    state: absent
+  ignore_errors: yes
+
+# 7. CodeDeploy 서비스 역할 삭제
 - name: Remove CodeDeploy Service Role
   amazon.aws.iam_role:
     name: "{{ prefix }}-codedeploy-service-role"
-    state: absent
-  ignore_errors: yes
-
-# 6. APP EC2 역할 삭제
-- name: Remove APP EC2 Role
-  amazon.aws.iam_role:
-    name: "{{ prefix }}-app-ec2-role"
-    state: absent
-  ignore_errors: yes
-
-# 7. Jenkins EC2 역할 삭제
-- name: Remove Jenkins EC2 Role
-  amazon.aws.iam_role:
-    name: "{{ prefix }}-jenkins-ec2-role"
     state: absent
   ignore_errors: yes
